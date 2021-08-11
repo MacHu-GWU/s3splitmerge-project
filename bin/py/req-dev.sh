@@ -9,5 +9,3 @@ source "${dir_bin}/py/python-env.sh"
 
 print_colored_line $color_cyan "[DOING] pip install ${path_dev_requirement_file} ..."
 ${bin_pip} install -r "${path_dev_requirement_file}"
-${bin_pip} install -r "${dir_project_root}/requirements-awswrangler.txt"
-${bin_pip} install awswrangler==2.10.0 --no-deps

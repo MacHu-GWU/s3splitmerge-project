@@ -1,7 +1,7 @@
 twine                           # make distribution archive
 wheel                           # make pre-compiled distribution package
 
-pathlib_mate==1.0.1
+pathlib_mate
 icecream==2.1.1
 rich==10.6.0
 chalice==1.24.1
