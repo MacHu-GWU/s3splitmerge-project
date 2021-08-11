@@ -7,9 +7,9 @@ s3splitmerge-*/
 vendor/awswrangler/
 vendor/s3splitmerge/
 
-*.json
-*.csv
-*.parquet
+poc/*/*.json
+poc/*/*.csv
+poc/*/*.parquet
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
