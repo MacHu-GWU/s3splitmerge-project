@@ -31,9 +31,6 @@ webencodings==0.5.1
 zipp==3.6.0
 
 # s3splitmerge core
-twine                           # make distribution archive
-wheel                           # make pre-compiled distribution package
-
 twine==3.5.0
 wheel==0.36.2
 pathlib_mate==1.0.1
