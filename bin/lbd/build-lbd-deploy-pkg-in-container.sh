@@ -22,8 +22,6 @@ virtualenv ${dir_venv}
 
 print_colored_line $color_cyan "pip install dependencies ..."
 ${bin_pip} install ${dir_project_root}
-${bin_pip} install -r ${dir_project_root}/requirements-awswrangler.txt
-${bin_pip} install awswrangler==2.10.0 --no-deps
 
 build_lbd_deployment_package
 

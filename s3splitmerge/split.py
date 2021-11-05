@@ -14,14 +14,16 @@ from .helpers import check_enumeration_s3_key_string, get_s3_object_metadata
 from .options import ZFILL
 
 
-def split_csv_by_size(s3_client,
-                      source_bucket: str,
-                      source_key: str,
-                      target_bucket: str,
-                      target_key: str,
-                      target_size: int,
-                      header: bool,
-                      zfill: int = ZFILL) -> typing.List[typing.Tuple[str, str]]:
+def split_csv_by_size(
+    s3_client,
+    source_bucket: str,
+    source_key: str,
+    target_bucket: str,
+    target_key: str,
+    target_size: int,
+    header: bool,
+    zfill: int = ZFILL,
+) -> typing.List[typing.Tuple[str, str]]:
     """
     .. note::
 
@@ -33,8 +35,8 @@ def split_csv_by_size(s3_client,
 
     nth_file = 0
     with smart_open.open(
-            f"s3://{source_bucket}/{source_key}", "rb",
-            transport_params=dict(client=s3_client)
+        f"s3://{source_bucket}/{source_key}", "rb",
+        transport_params=dict(client=s3_client)
     ) as s3obj:
         buffer = io.BytesIO()
         buffer_size = 0
@@ -79,14 +81,16 @@ def split_csv_by_size(s3_client,
     return target_s3_bucket_key_list
 
 
-def split_csv_by_rows(s3_client,
-                      source_bucket: str,
-                      source_key: str,
-                      target_bucket: str,
-                      target_key: str,
-                      target_rows: int,
-                      header: bool,
-                      zfill: int = ZFILL) -> typing.List[typing.Tuple[str, str]]:
+def split_csv_by_rows(
+    s3_client,
+    source_bucket: str,
+    source_key: str,
+    target_bucket: str,
+    target_key: str,
+    target_rows: int,
+    header: bool,
+    zfill: int = ZFILL,
+) -> typing.List[typing.Tuple[str, str]]:
     """
     - Small memory usage
     - 2 x faster than v1
@@ -96,8 +100,8 @@ def split_csv_by_rows(s3_client,
     target_s3_bucket_key_list = list()
 
     with smart_open.open(
-            f"s3://{source_bucket}/{source_key}", "r",
-            transport_params=dict(client=s3_client)
+        f"s3://{source_bucket}/{source_key}", "r",
+        transport_params=dict(client=s3_client)
     ) as f_in:
         if header:
             header_line = f_in.readline()
@@ -108,8 +112,8 @@ def split_csv_by_rows(s3_client,
             one_more_line = f_in.readline()
             if one_more_line:
                 with smart_open.open(
-                        f"s3://{target_bucket}/{target_key.format(i=str(nth_file).zfill(zfill))}", "w",
-                        transport_params=dict(client=s3_client),
+                    f"s3://{target_bucket}/{target_key.format(i=str(nth_file).zfill(zfill))}", "w",
+                    transport_params=dict(client=s3_client),
                 ) as f_out:
                     if header:
                         f_out.write(header_line)
@@ -128,13 +132,15 @@ def split_csv_by_rows(s3_client,
     return target_s3_bucket_key_list
 
 
-def split_json_by_size(s3_client,
-                       source_bucket: str,
-                       source_key: str,
-                       target_bucket: str,
-                       target_key: str,
-                       target_size: int,
-                       zfill: int = ZFILL):
+def split_json_by_size(
+    s3_client,
+    source_bucket: str,
+    source_key: str,
+    target_bucket: str,
+    target_key: str,
+    target_size: int,
+    zfill: int = ZFILL,
+):
     """
     """
     return split_csv_by_size(
@@ -149,13 +155,15 @@ def split_json_by_size(s3_client,
     )
 
 
-def split_json_by_rows(s3_client,
-                       source_bucket: str,
-                       source_key: str,
-                       target_bucket: str,
-                       target_key: str,
-                       target_rows: int,
-                       zfill: int = ZFILL) -> typing.List[typing.Tuple[str, str]]:
+def split_json_by_rows(
+    s3_client,
+    source_bucket: str,
+    source_key: str,
+    target_bucket: str,
+    target_key: str,
+    target_rows: int,
+    zfill: int = ZFILL,
+) -> typing.List[typing.Tuple[str, str]]:
     """
     - Small memory usage
     - 2 x faster than v1

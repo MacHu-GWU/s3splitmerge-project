@@ -8,7 +8,7 @@
             "iam_role_arn": "arn:aws:iam::669508176277:role/sanhe-lambda-s3-full-access",
             "manage_iam_role": false,
             "layers": [
-                "arn:aws:lambda:us-east-1:669508176277:layer:s3splitmerge:1"
+                "arn:aws:lambda:us-east-1:669508176277:layer:s3splitmerge:2"
             ],
             "lambda_functions": {
                 "handler_split_csv": {},

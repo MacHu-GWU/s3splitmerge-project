@@ -1,8 +1,28 @@
 # -*- coding: utf-8 -*-
 
+import base64
 import typing
 import smart_open
 from .exc import S3ObjectNotFound, InvalidEnumerationS3Key
+
+
+def b64encode_str(text) -> str:
+    return base64.b64encode(text.encode("utf8")).decode("utf8")
+
+
+def b64decode_str(encoded_text) -> str:
+    return base64.b64decode(encoded_text.encode("utf8")).decode("utf8")
+
+
+def parse_s3_uri(s3_uri: str) -> typing.Tuple[str, str]:
+    """
+    :param s3_uri:
+    :return:
+    """
+    chunks = s3_uri.split("/", 3)
+    bucket = chunks[2]
+    key = chunks[3]
+    return bucket, key
 
 
 class Metadata:
@@ -11,7 +31,11 @@ class Metadata:
         self.etag = etag
 
 
-def get_s3_object_metadata(s3_client, bucket, key) -> Metadata:
+def get_s3_object_metadata(
+    s3_client,
+    bucket,
+    key,
+) -> Metadata:
     try:
         response = s3_client.head_object(Bucket=bucket, Key=key)
         content_length = response["ContentLength"]
@@ -39,7 +63,11 @@ def count_lines_in_s3_object(s3_client, bucket, key) -> int:
     """
     Find number of lines in a text s3 object.
     """
-    with smart_open.open(f"s3://{bucket}/{key}", "r", transport_params=dict(client=s3_client)) as obj:
+    with smart_open.open(
+        f"s3://{bucket}/{key}",
+        "r",
+        transport_params=dict(client=s3_client)
+    ) as obj:
         for id, line in enumerate(obj):
             pass
     return id + 1

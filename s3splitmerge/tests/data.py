@@ -5,51 +5,54 @@ Test data generator
 """
 
 import io
-import base64
 import uuid
+import random
 import pandas as pd
 import awswrangler as wr
 from pathlib_mate import Path
-from .aws import bucket, boto_ses
-from ..helpers import is_s3_object_exists, check_enumeration_s3_key_string
+from .aws import boto_ses, bucket, prefix
+from ..helpers import (
+    b64encode_str,
+    is_s3_object_exists, check_enumeration_s3_key_string,
+)
 from ..options import ZFILL
 
-
-def b64encode_s3_uri(s3_uri) -> str:
-    return base64.b64encode(s3_uri.encode("utf8")).decode("utf8")
+hexdigits = "0123456789abcdef"
 
 
-def b64decode_s3_uri(encoded_s3_uri) -> str:
-    return base64.b64decode(encoded_s3_uri.encode("utf8")).decode("utf8")
+def rand_str(length):
+    return "".join([random.choice(hexdigits) for _ in range(length)])
 
 
-def create_s3_csv_file(boto_ses,
-                       n_k_rows: int,
-                       header: bool,
-                       bucket: str,
-                       key: str,
-                       overwrite: bool = True):
+# --- Create single file ---
+def create_s3_csv_file(
+    boto_ses,
+    bucket: str,
+    key: str,
+    n_k_rows: int,
+    header: bool,
+    overwrite: bool = True,
+) -> str:
     """
     Create a csv file on S3 with dummy data.
 
-    :param boto_ses:
     :param n_k_rows: ``n_k_rows`` * 1000 rows will be created
     :param header: if True, the csv file has header line
-    :param bucket:
-    :param key:
+
+    :return: s3 uri
     """
     s3_client = boto_ses.client("s3")
-    n_rows_per_df = 1000
+    s3_uri = f"s3://{bucket}/{key}"
     columns = ["id", "value"]
     value = "a" * 128
-    s3_uri = f"s3://{bucket}/{key}"
+    buffer_size = 1000  # BECAUSE IT's n_k_rows, don't change this value 1000.
 
     if (overwrite is False) and is_s3_object_exists(s3_client, bucket, key):
-        return
+        return s3_uri
 
     if n_k_rows <= 1000:  # use in memory creation
         df = pd.DataFrame(columns=columns)
-        df["id"] = range(1, 1 + n_k_rows * n_rows_per_df)
+        df["id"] = range(1, 1 + n_k_rows * buffer_size)
         df["value"] = value
         wr.s3.to_csv(
             df=df,
@@ -59,13 +62,14 @@ def create_s3_csv_file(boto_ses,
             boto3_session=boto_ses,
         )
     else:  # dump to local temp file and multi-part upload to s3
-        tmp_file = Path("/tmp", b64encode_s3_uri(s3_uri) + ".csv")
+        tmp_file = Path("/tmp", b64encode_str(s3_uri) + ".csv")
         if tmp_file.exists():
             tmp_file.remove()
         is_first_write = True
         for nth_df in range(1, 1 + n_k_rows):
-            id_lower = (nth_df - 1) * n_rows_per_df + 1
-            id_upper = id_lower + n_rows_per_df
+            id_lower = (nth_df - 1) * buffer_size + 1
+            id_upper = id_lower + buffer_size
+            print(f"creating id: {id_lower} ~ {id_upper}")
             df = pd.DataFrame(columns=columns)
             df["id"] = range(id_lower, id_upper)
             df["value"] = value
@@ -81,55 +85,57 @@ def create_s3_csv_file(boto_ses,
                 mode="a",
             )
         s3_client.upload_file(tmp_file.abspath, bucket, key)
+    return s3_uri
 
 
 def create_csv_1MB(overwrite):
-    create_s3_csv_file(
+    return create_s3_csv_file(
         boto_ses=boto_ses,
-        n_k_rows=7,
-        header=True,
         bucket=bucket,
-        key="s3splitmerge/tests/big-file/csv-1MB.csv",
+        key=f"{prefix}/big-file/csv-1MB.csv",
+        n_k_rows=8,
+        header=True,
         overwrite=overwrite,
     )
 
 
 def create_csv_1GB(overwrite):
-    create_s3_csv_file(
+    return create_s3_csv_file(
         boto_ses=boto_ses,
-        n_k_rows=7500,
-        header=True,
         bucket=bucket,
-        key="s3splitmerge/tests/big-file/csv-1GB.csv",
+        key=f"{prefix}/big-file/csv-1GB.csv",
+        n_k_rows=7700,
+        header=True,
         overwrite=overwrite,
     )
 
 
-def create_s3_json_file(boto_ses,
-                        n_k_rows: int,
-                        bucket: str,
-                        key: str,
-                        overwrite: bool = True):
+def create_s3_json_file(
+    boto_ses,
+    bucket: str,
+    key: str,
+    n_k_rows: int,
+    overwrite: bool = True,
+) -> str:
     """
     Create a json file on S3 with dummy data.
 
-    :param boto_ses:
     :param n_k_rows: ``n_k_rows`` * 1000 rows will be created
-    :param bucket:
-    :param key:
+
+    :return: s3 uri
     """
     s3_client = boto_ses.client("s3")
-    n_rows_per_df = 1000
+    s3_uri = f"s3://{bucket}/{key}"
     columns = ["id", "value"]
     value = "a" * 128
-    s3_uri = f"s3://{bucket}/{key}"
+    buffer_size = 1000  # BECAUSE IT's n_k_rows, don't change this value 1000.
 
     if (overwrite is False) and is_s3_object_exists(s3_client, bucket, key):
-        return
+        return s3_uri
 
     if n_k_rows <= 1000:  # use in memory creation
         df = pd.DataFrame(columns=columns)
-        df["id"] = range(1, 1 + n_k_rows * n_rows_per_df)
+        df["id"] = range(1, 1 + n_k_rows * buffer_size)
         df["value"] = value
         wr.s3.to_json(
             df=df,
@@ -139,14 +145,14 @@ def create_s3_json_file(boto_ses,
             boto3_session=boto_ses,
         )
     else:  # dump to local temp file and multi-part upload to s3
-        tmp_file = Path("/tmp", b64encode_s3_uri(s3_uri) + ".json")
+        tmp_file = Path("/tmp", b64encode_str(s3_uri) + ".json")
         if tmp_file.exists():
             tmp_file.remove()
         with open(tmp_file.abspath, "a") as file:
             for nth_df in range(1, 1 + n_k_rows):
-                id_lower = (nth_df - 1) * n_rows_per_df + 1
-                id_upper = id_lower + n_rows_per_df
-                print(id_lower, id_upper)
+                id_lower = (nth_df - 1) * buffer_size + 1
+                id_upper = id_lower + buffer_size
+                print(f"creating id: {id_lower} ~ {id_upper}")
                 df = pd.DataFrame(columns=columns)
                 df["id"] = range(id_lower, id_upper)
                 df["value"] = value
@@ -158,34 +164,94 @@ def create_s3_json_file(boto_ses,
                 )
                 file.write(buffer.getvalue())
         s3_client.upload_file(tmp_file.abspath, bucket, key)
+    return s3_uri
 
 
 def create_json_1MB(overwrite):
-    create_s3_json_file(
+    return create_s3_json_file(
         boto_ses=boto_ses,
-        n_k_rows=7,
         bucket=bucket,
-        key="s3splitmerge/tests/big-file/json-1MB.json",
+        key=f"{prefix}/big-file/json-1MB.json",
+        n_k_rows=7,
         overwrite=overwrite,
     )
 
 
 def create_json_1GB(overwrite):
-    create_s3_json_file(
+    return create_s3_json_file(
         boto_ses=boto_ses,
-        n_k_rows=6500,
         bucket=bucket,
-        key="s3splitmerge/tests/big-file/json-1GB.json",
+        key=f"{prefix}/big-file/json-1GB.json",
+        n_k_rows=6800,
         overwrite=overwrite,
     )
 
 
+def create_s3_parquet_file(
+    boto_ses,
+    bucket: str,
+    key: str,
+    n_k_rows: int,
+    overwrite=True,
+) -> str:
+    """
+    Create a json file on S3 with dummy data.
+
+    :param n_k_rows: ``n_k_rows`` * 1000 rows will be created
+
+    :return: s3 uri
+    """
+    s3_client = boto_ses.client("s3")
+    s3_uri = f"s3://{bucket}/{key}"
+    columns = ["id", "value"]
+    if (overwrite is False) and is_s3_object_exists(s3_client, bucket, key):
+        return s3_uri
+
+    df = pd.DataFrame(columns=columns)
+    df["id"] = range(1, 1 + n_k_rows * 1000)
+    df["value"] = [
+        rand_str(length=128)
+        for _ in range(n_k_rows * 1000)
+    ]
+    wr.s3.to_parquet(
+        df=df,
+        path=s3_uri,
+        boto3_session=boto_ses,
+    )
+    return s3_uri
+
+
+def create_parquet_1MB(overwrite):
+    return create_s3_parquet_file(
+        boto_ses=boto_ses,
+        bucket=bucket,
+        key=f"{prefix}/big-file/parquet-1MB.parquet",
+        n_k_rows=8,
+        overwrite=overwrite,
+    )
+
+
+def create_parquet_1GB(overwrite):
+    return create_s3_parquet_file(
+        boto_ses=boto_ses,
+        bucket=bucket,
+        key=f"{prefix}/big-file/parquet-1GB.parquet",
+        n_k_rows=7800,
+        overwrite=overwrite,
+    )
+
+
+# --- Create many files ---
 def create_many_parquet_file(boto_ses,
                              n_files: int,
                              n_rows_per_file: int,
                              bucket: str,
                              key: str,
                              overwrite=True):
+    """
+    Create many parquet file at s3://{bucket}/{key}{i}.parquet. The key has
+    to have a sub string "{i}.parquet"
+    """
     s3_client = boto_ses.client("s3")
     columns = ["id", "value"]
     check_enumeration_s3_key_string(key)
@@ -204,26 +270,26 @@ def create_many_parquet_file(boto_ses,
         wr.s3.to_parquet(df=df, path=s3_uri, boto3_session=boto_ses)
 
 
-def create_parquet_1MB(overwrite):
-    create_many_parquet_file(
-        boto_ses=boto_ses,
-        n_files=3,
-        n_rows_per_file=7500,
-        bucket=bucket,
-        key="s3splitmerge/tests/many-file/parquet-1MB/{i}.parquet",
-        overwrite=overwrite,
-    )
+# def create_parquet_1MB(overwrite):
+#     create_many_pardquet_file(
+#         boto_ses=boto_ses,
+#         n_files=3,
+#         n_rows_per_file=7500,
+#         bucket=bucket,
+#         key="s3splitmerge/tests/many-file/parquet-1MB/{i}.parquet",
+#         overwrite=overwrite,
+#     )
 
 
-def create_parquet_1GB(overwrite):
-    create_many_parquet_file(
-        boto_ses=boto_ses,
-        n_files=25,
-        n_rows_per_file=1000 * 1000,
-        bucket=bucket,
-        key="s3splitmerge/tests/many-file/parquet-1GB/{i}.parquet",
-        overwrite=overwrite,
-    )
+# def create_parquet_1GB(overwrite):
+#     create_many_parquet_file(
+#         boto_ses=boto_ses,
+#         n_files=25,
+#         n_rows_per_file=1000 * 1000,
+#         bucket=bucket,
+#         key="s3splitmerge/tests/many-file/parquet-1GB/{i}.parquet",
+#         overwrite=overwrite,
+#     )
 
 
 def create_many_json_file(boto_ses,
@@ -232,6 +298,10 @@ def create_many_json_file(boto_ses,
                           bucket: str,
                           key: str,
                           overwrite=True):
+    """
+    Create many json file at s3://{bucket}/{key}{i}.json. The key has
+    to have a sub string "{i}.json"
+    """
     s3_client = boto_ses.client("s3")
     columns = ["id", "value"]
     value = "a" * 128

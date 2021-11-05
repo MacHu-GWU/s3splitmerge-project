@@ -1,6 +1,41 @@
+# dependencies
+atomicwrites==1.4.0
+asttokens==2.0.5
+autopep8==1.6.0
+bleach==4.1.0
+blessed==1.17.6
+chalice==1.24.1
+click==7.1.2
+colorama==0.4.4
+commonmark==0.9.1
+docutils==0.18
+executing==0.8.2
+importlib-metadata==4.8.1
+inquirer==2.7.0
+keyring==23.2.1
+mypy-extensions==0.4.3
+pip==21.2.4
+pkginfo==1.7.1
+pycodestyle==2.8.0
+pygments==2.10.0
+python-editor==1.0.4
+pyyaml==5.4.1
+readchar==2.0.1
+readme-renderer==30.0
+requests-toolbelt==0.9.1
+rfc3986==1.5.0
+toml==0.10.2
+tqdm==4.62.3
+wcwidth==0.2.5
+webencodings==0.5.1
+zipp==3.6.0
+
+# s3splitmerge core
 twine                           # make distribution archive
 wheel                           # make pre-compiled distribution package
 
+twine==3.5.0
+wheel==0.36.2
 pathlib_mate==1.0.1
 icecream==2.1.1
 rich==10.6.0

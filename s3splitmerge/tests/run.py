@@ -17,20 +17,23 @@ from ..helpers import (
 )
 
 
-def run_test_split_csv(boto_ses,
-                       n_k_rows: int,
-                       header: bool,
-                       source_bucket: str,
-                       source_key: str,
-                       target_bucket: str,
-                       target_key: str,
-                       target_size_or_rows: int,
-                       split_csv_func: typing.Callable,
-                       force_redo: bool):
+def run_test_split_csv(
+    boto_ses,
+    n_k_rows: int,
+    header: bool,
+    source_bucket: str,
+    source_key: str,
+    target_bucket: str,
+    target_key: str,
+    target_size_or_rows: int,
+    split_csv_func: typing.Callable,
+    force_redo: bool,
+):
     """
     A parameterized split_csv_... function unit test executor.
     """
     s3_client = boto_ses.client("s3")
+
     # Create single source csv file if not exists
     if (force_redo) or (not is_s3_object_exists(s3_client, source_bucket, source_key)):
         create_s3_csv_file(
@@ -41,7 +44,7 @@ def run_test_split_csv(boto_ses,
             key=source_key,
         )
 
-    # If first target not exists, execute split csv
+    # If first target file dosn't exist, execute split csv
     first_target_key = target_key.format(i=1)
     if (force_redo) or (not is_s3_object_exists(s3_client, target_bucket, first_target_key)):
         split_csv_func(
@@ -85,15 +88,17 @@ def run_test_split_csv(boto_ses,
     assert n_rows_total == n_k_rows * 1000
 
 
-def run_test_split_json(boto_ses,
-                        n_k_rows: int,
-                        source_bucket: str,
-                        source_key: str,
-                        target_bucket: str,
-                        target_key: str,
-                        target_size_or_rows: int,
-                        split_json_func: typing.Callable,
-                        force_redo: bool):
+def run_test_split_json(
+    boto_ses,
+    n_k_rows: int,
+    source_bucket: str,
+    source_key: str,
+    target_bucket: str,
+    target_key: str,
+    target_size_or_rows: int,
+    split_json_func: typing.Callable,
+    force_redo: bool,
+):
     """
     A parameterized split_json_... function unit test executor.
     """
