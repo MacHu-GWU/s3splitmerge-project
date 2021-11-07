@@ -99,6 +99,28 @@ def create_csv_1MB(overwrite):
     )
 
 
+def create_csv_100MB(overwrite):
+    return create_s3_csv_file(
+        boto_ses=boto_ses,
+        bucket=bucket,
+        key=f"{prefix}/big-file/csv-100MB.csv",
+        n_k_rows=800,
+        header=True,
+        overwrite=overwrite,
+    )
+
+
+def create_csv_300MB(overwrite):
+    return create_s3_csv_file(
+        boto_ses=boto_ses,
+        bucket=bucket,
+        key=f"{prefix}/big-file/csv-300MB.csv",
+        n_k_rows=2400,
+        header=True,
+        overwrite=overwrite,
+    )
+
+
 def create_csv_1GB(overwrite):
     return create_s3_csv_file(
         boto_ses=boto_ses,
@@ -173,6 +195,26 @@ def create_json_1MB(overwrite):
         bucket=bucket,
         key=f"{prefix}/big-file/json-1MB.json",
         n_k_rows=7,
+        overwrite=overwrite,
+    )
+
+
+def create_json_100MB(overwrite):
+    return create_s3_json_file(
+        boto_ses=boto_ses,
+        bucket=bucket,
+        key=f"{prefix}/big-file/json-100MB.json",
+        n_k_rows=700,
+        overwrite=overwrite,
+    )
+
+
+def create_json_300MB(overwrite):
+    return create_s3_json_file(
+        boto_ses=boto_ses,
+        bucket=bucket,
+        key=f"{prefix}/big-file/json-300MB.json",
+        n_k_rows=2100,
         overwrite=overwrite,
     )
 

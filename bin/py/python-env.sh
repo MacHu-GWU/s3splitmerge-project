@@ -80,6 +80,7 @@ resolve_venv_bin()
     bin_tox="${tmp_dir_venv_bin}/tox"
     bin_jupyter="${tmp_dir_venv_bin}/jupyter"
     bin_aws="${tmp_dir_venv_bin}/aws"
+    bin_chalice="${tmp_dir_venv_bin}/chalice"
 }
 
 

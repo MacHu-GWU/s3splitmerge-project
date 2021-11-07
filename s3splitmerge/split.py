@@ -8,7 +8,6 @@ to track number size written to buffer.
 import io
 import math
 import typing
-
 import smart_open
 from .helpers import check_enumeration_s3_key_string, get_s3_object_metadata
 from .options import ZFILL
@@ -34,19 +33,20 @@ def split_csv_by_size(
     target_s3_bucket_key_list = list()
 
     nth_file = 0
+    # open the big source file
     with smart_open.open(
         f"s3://{source_bucket}/{source_key}", "rb",
         transport_params=dict(client=s3_client)
     ) as s3obj:
         buffer = io.BytesIO()
-        buffer_size = 0
-        if header:
+        small_file_size = 0  # count the current size of the small file
+        if header:  # store header_line for future use
             header_line = s3obj.readline()
             buffer.write(header_line)
 
-        for line in s3obj:
-            buffer_size += buffer.write(line)
-            if buffer_size >= target_size:
+        for line in s3obj:  # iterate line in source s3 object
+            small_file_size += buffer.write(line)
+            if small_file_size >= target_size:
                 nth_file += 1
                 s3_client.put_object(
                     Bucket=target_bucket,
@@ -60,11 +60,11 @@ def split_csv_by_size(
                     )
                 )
                 buffer = io.BytesIO()
-                buffer_size = 0
+                small_file_size = 0
                 if header:
                     buffer.write(header_line)
 
-        if buffer_size:
+        if small_file_size:
             nth_file += 1
             s3_client.put_object(
                 Bucket=target_bucket,
@@ -103,7 +103,7 @@ def split_csv_by_rows(
         f"s3://{source_bucket}/{source_key}", "r",
         transport_params=dict(client=s3_client)
     ) as f_in:
-        if header:
+        if header: # store header_line for future use
             header_line = f_in.readline()
 
         nth_file = 0
@@ -140,7 +140,7 @@ def split_json_by_size(
     target_key: str,
     target_size: int,
     zfill: int = ZFILL,
-):
+) -> typing.List[typing.Tuple[str, str]]:
     """
     """
     return split_csv_by_size(

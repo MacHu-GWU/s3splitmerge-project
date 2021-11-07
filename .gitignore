@@ -2,7 +2,7 @@
 s3splitmerge_venv/
 s3splitmerge.egg-info/
 s3splitmerge-*/
-.chalice/deployments/
+app/.chalice/deployments/
 vendor/awswrangler/
 vendor/s3splitmerge/
 

@@ -1,0 +1,19 @@
+{
+    "version": "2.0",
+    "app_name": "s3splitmerge",
+    "stages": {
+        "dev": {
+            "lambda_memory_size": 1024,
+            "lambda_timeout": 300,
+            "iam_role_arn": "arn:aws:iam::669508176277:role/sanhe-lambda-s3-full-access",
+            "manage_iam_role": false,
+            "layers": [
+                "arn:aws:lambda:us-east-1:669508176277:layer:s3splitmerge:7"
+            ],
+            "lambda_functions": {
+                "handler_split_csv": {},
+                "handler_merge_parquet": {}
+            }
+        }
+    }
+}
